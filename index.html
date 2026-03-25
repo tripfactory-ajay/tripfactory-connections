@@ -990,8 +990,9 @@ async function saveEdit() {
       author: author
     };
     await db.ref(LOG_PATH).push(logEntry);
+    const savedName = currentEdit.name;
     closeModal();
-    toast('✓ Saved — ' + currentEdit.name, 'success');
+    toast('✓ Saved — ' + savedName, 'success');
   } catch (err) {
     toast('Error saving: ' + err.message, 'error');
   } finally {
