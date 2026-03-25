@@ -5,8 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TripFactory · Supply Tracker (Live)</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "firebase/app": "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js",
+    "firebase/database": "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js"
+  }
+}
+</script>
 <style>
 :root{
   --bg:#f8f9fb;--surface:#fff;--surface2:#f1f4f8;--border:#e2e8f0;
@@ -348,8 +354,7 @@ const firebaseConfig = {
   appId: "1:25736842668:web:754f9cf6268e2a5552fe09"
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+// db helpers assigned by module below: dbRef, dbSet, dbUpdate, dbPush, dbOnValue, dbGet
 const SUPPLIERS_PATH = 'supply-tracker/suppliers';
 const LOG_PATH = 'supply-tracker/log';
 
@@ -362,38 +367,38 @@ const SEED = [
   {id:'h-tbo',vertical:'Hotel',cat:'Bedbank',name:'TBO',status:'Already Live',region:'GLOBAL',contract:'Signed',tech:'Completed',notes:'B2B bedbank. ops.api@tbo.com. Fully live.'},
   {id:'h-webbeds',vertical:'Hotel',cat:'Bedbank',name:'Web Beds',status:'Already Live',region:'GLOBAL',contract:'Signed',tech:'Completed',notes:'Global bedbank. Vivek.Dixit@webbeds.com. Live.'},
   {id:'h-dida',vertical:'Hotel',cat:'Bedbank',name:'Dida Travels',status:'Already Live',region:'GLOBAL',contract:'Signed',tech:'Completed',notes:'China-based. anket.joshi@dida.com. Live.'},
-  {id:'h-grn',vertical:'Hotel',cat:'Bedbank',name:'GRNConnect',status:'Already Live',region:'GLOBAL',contract:'Signed',tech:'Completed',notes:'Disabled for now — ops issue.'},
+  {id:'h-grn',vertical:'Hotel',cat:'Bedbank',name:'GRNConnect',status:'Already Live',region:'GLOBAL',contract:'Signed',tech:'Completed',notes:'Global bedbank. Disabled for now — ops issue.'},
   {id:'h-hyperguest',vertical:'Hotel',cat:'Bedbank',name:'HyperGuest',status:'Already Live',region:'GLOBAL',contract:'Signed',tech:'Completed',notes:'Direct connectivity platform. Live.'},
   {id:'h-illusions',vertical:'Hotel',cat:'Bedbank',name:'Illusions',status:'Already Live',region:'GLOBAL',contract:'Signed',tech:'Completed',notes:'Global bedbank. Live.'},
-  {id:'h-derbysoft',vertical:'Hotel',cat:'Bedbank',name:'Derbysoft',status:'Already Live',region:'GLOBAL',contract:'Signed',tech:'Completed',notes:'Hotel distribution switch. parthab@derbysoft.net. Pending to connect with Partha.'},
-  {id:'h-paximum',vertical:'Hotel',cat:'Bedbank',name:'Paximum',status:'Already Live',region:'MEA / Turkey',contract:'Signed',tech:'Completed',notes:'Turkey/MEA. Note: Skip already live — Poor API, Amit sir aware.'},
-  {id:'h-darina',vertical:'Hotel',cat:'DMC',name:'Darina Holidays',status:'Already Live',region:'MEA',contract:'Signed',tech:'Completed',notes:'UAE DMC. Mapping blockers pending product/chandu.'},
-  {id:'h-locanda',vertical:'Hotel',cat:'DMC',name:'Locanda',status:'Already Live',region:'MEA',contract:'Signed',tech:'Completed',notes:'Italy DMC. Contract pending at Locanda. Mapping pending at TF.'},
+  {id:'h-derbysoft',vertical:'Hotel',cat:'Bedbank',name:'Derbysoft',status:'Already Live',region:'GLOBAL',contract:'Signed',tech:'Completed',notes:'Hotel distribution switch. Pending to connect with Partha.'},
+  {id:'h-paximum',vertical:'Hotel',cat:'Bedbank',name:'Paximum',status:'Already Live',region:'MEA / Turkey',contract:'Signed',tech:'Completed',notes:'Turkey/MEA. SKIP — Poor API. Amit sir aware.'},
+  {id:'h-darina',vertical:'Hotel',cat:'DMC',name:'Darina Holidays',status:'Already Live',region:'MEA',contract:'Signed',tech:'Completed',notes:'UAE DMC. Live — mapping initiated, blockers pending at product/chandu.'},
+  {id:'h-locanda',vertical:'Hotel',cat:'DMC',name:'Locanda',status:'Already Live',region:'MEA',contract:'Signed',tech:'Completed',notes:'Italy DMC. z.awada@locandahub.com. Contract pending at Locanda. Mapping pending at TF.'},
   {id:'h-travco',vertical:'Hotel',cat:'DMC',name:'Travco',status:'Already Live',region:'EUROPE',contract:'Signed',tech:'Completed',notes:'UK Wholesaler. Live.'},
-  {id:'h-travelbullz',vertical:'Hotel',cat:'DMC',name:'Travelbullz',status:'Already Live',region:'ASIA',contract:'Signed',tech:'Completed',notes:'Thailand DMC. DISABLED — ops issue, challenges re API.'},
-  {id:'h-vervotech',vertical:'Hotel',cat:'Tech/Mapping',name:'Vervotech',status:'Already Live',region:'GLOBAL',contract:'Signed',tech:'Completed',notes:'Hotel mapping. Phase 1 (Hotel2Hotel) + Phase 2 (Room Mapping) live.'},
+  {id:'h-travelbullz',vertical:'Hotel',cat:'DMC',name:'Travelbullz',status:'Already Live',region:'ASIA',contract:'Signed',tech:'Completed',notes:'Thailand DMC. DISABLED — ops issue.'},
+  {id:'h-vervotech',vertical:'Hotel',cat:'Tech/Mapping',name:'Vervotech',status:'Already Live',region:'GLOBAL',contract:'Signed',tech:'Completed',notes:'Phase 1 Hotel2Hotel Mapping (Live). Phase 2 Room Mapping (Main focus). Contract signed.'},
   {id:'h-ottila',vertical:'Hotel',cat:'DMC',name:'Ottila',status:'P1-Medium',region:'INDIA',contract:'Signed',tech:'Completed',notes:'India B2B wholesaler. aru@ottila.net. Live.'},
   {id:'h-staah',vertical:'Hotel',cat:'Channel Manager',name:'Staah',status:'Already Live',region:'GLOBAL',contract:'Signed',tech:'Completed',notes:'Hotel Channel Manager. Direct Integration. Live.'},
   {id:'h-rategain',vertical:'Hotel',cat:'Channel Manager',name:'Rategain',status:'Already Live',region:'GLOBAL',contract:'Signed',tech:'Completed',notes:'Hotel Channel Manager. Direct Integration. Live.'},
   {id:'h-tripanzee',vertical:'Hotel',cat:'Channel Manager',name:'Tripanzee',status:'Already Live',region:'GLOBAL',contract:'Signed',tech:'Completed',notes:'Channel Manager. Can connect to Siteminder. Live.'},
   {id:'h-unihotel',vertical:'Hotel',cat:'Channel Manager',name:'Unihotel',status:'Already Live',region:'GLOBAL',contract:'Signed',tech:'Completed',notes:'Hotel direct integration. Live.'},
   // HOTELS — P0
-  {id:'h-mgholiday',vertical:'Hotel',cat:'DMC',name:'MG Holiday',status:'P0 - immediate',region:'ASIA',contract:'Signed',tech:'Completed',notes:'Mapping file 10k properties pending. Signed Agreement copy pending.'},
-  {id:'h-miki',vertical:'Hotel',cat:'DMC',name:'Miki Travel',status:'P0 - immediate',region:'EUROPE',contract:'Signed',tech:'Completed',notes:'Credit line being sorted. Invoice shared — payment to process.'},
-  {id:'h-g2',vertical:'Hotel',cat:'DMC',name:'G2 Travel',status:'P0 - immediate',region:'EUROPE',contract:'In Review',tech:'Completed',notes:'Cert done. Live creds pending from supplier. CA sign-off pending.'},
-  {id:'h-restel',vertical:'Hotel',cat:'Bedbank',name:'Restel',status:'P0 - immediate',region:'EUROPE',contract:'Signed',tech:'In Progress',notes:'CA signed. Under development.'},
-  {id:'h-withinearth',vertical:'Hotel',cat:'DMC',name:'WithinEarth',status:'P0 - immediate',region:'ASIA',contract:'Signed',tech:'In Progress',notes:'On pause. Commercial pending till Feb. Cert sent 5 Jan.'},
-  {id:'h-rakuten',vertical:'Hotel',cat:'OTA',name:'Rakuten Travel Exchange',status:'P0 - immediate',region:'ASIA',contract:'Signed',tech:'Under Certification',notes:'Japan OTA. Cert test cases pending at TF.'},
-  {id:'h-tourmind',vertical:'Hotel',cat:'Bedbank',name:'TourMind',status:'P0 - immediate',region:'ASIA',contract:'Signed',tech:'In Progress',notes:'SEA/MEA aggressive. CA sent 09/01.'},
-  {id:'h-traveloka',vertical:'Hotel',cat:'OTA',name:'Traveloka',status:'P0 - immediate',region:'ASIA',contract:'In Review',tech:'In Progress',notes:'Strong SEA. 90k+ hotels. CA sent.'},
-  {id:'h-ratehawk',vertical:'Hotel',cat:'Bedbank',name:'RateHawk',status:'P0 - immediate',region:'GLOBAL',contract:'In Review',tech:'Completed',notes:'Commercials pending at supplier. Live setup done.'},
-  {id:'h-rayna',vertical:'Hotel',cat:'DMC',name:'Rayna Tours',status:'P0 - immediate',region:'MEA',contract:'In Review',tech:'Not Picked',notes:'UAE major DMC. Commercial review pending.'},
-  {id:'h-desert',vertical:'Hotel',cat:'DMC',name:'Desert Adventures',status:'P0 - immediate',region:'MEA',contract:'In Review',tech:'Completed',notes:'Dubai DMC. Live API keys awaited. Mapping pending at TF.'},
-  {id:'h-tripmax',vertical:'Hotel',cat:'OTA',name:'Tripmax / Zentrumhub',status:'P0 - immediate',region:'INDIA',contract:'Signed',tech:'In Progress',notes:'India domestic hotels. Under dev.'},
-  {id:'h-travelguru',vertical:'Hotel',cat:'OTA',name:'Travelguru',status:'P0 - immediate',region:'INDIA',contract:'In Review',tech:'In Progress',notes:'India OTA. Under development.'},
-  {id:'h-cleartrip',vertical:'Hotel',cat:'OTA',name:'ClearTrip',status:'P0 - immediate',region:'INDIA',contract:'In Review',tech:'Not Picked',notes:'India OTA. CA pending at supplier.'},
-  {id:'h-welcomebeds',vertical:'Hotel',cat:'Bedbank',name:'Welcomebeds',status:'P0 - immediate',region:'EUROPE',contract:'In Review',tech:'Not Picked',notes:'Europe/SEA bedbank. Contract review pending.'},
-  {id:'h-sterling',vertical:'Hotel',cat:'Bedbank',name:'Sterling (Hobse)',status:'P0 - immediate',region:'GLOBAL',contract:'In Review',tech:'In Progress',notes:'Test creds delayed — intern on exam leave since Dec 29.'},
+  {id:'h-mgholiday',vertical:'Hotel',cat:'DMC',name:'MG Holiday',status:'P0 - immediate',region:'ASIA',contract:'Signed',tech:'Completed',notes:'P0. Need to check for blocker. Mapping file pending.'},
+  {id:'h-miki',vertical:'Hotel',cat:'DMC',name:'Miki Travel',status:'P0 - immediate',region:'EUROPE',contract:'Signed',tech:'Completed',notes:'Credit line being sorted. Under development.'},
+  {id:'h-g2',vertical:'Hotel',cat:'DMC',name:'G2 Travel',status:'P0 - immediate',region:'EUROPE',contract:'In Review',tech:'Completed',notes:'On Pause. Supplier yet to revert with change of Points.'},
+  {id:'h-restel',vertical:'Hotel',cat:'Bedbank',name:'Restel',status:'P0 - immediate',region:'EUROPE',contract:'Signed',tech:'In Progress',notes:'CA signed & countersigned received. Currently under development with tech team.'},
+  {id:'h-withinearth',vertical:'Hotel',cat:'DMC',name:'WithinEarth',status:'P0 - immediate',region:'ASIA',contract:'Signed',tech:'In Progress',notes:'On Pause. Commercial signed without vetting.'},
+  {id:'h-rakuten',vertical:'Hotel',cat:'OTA',name:'Rakuten Travel Exchange',status:'P0 - immediate',region:'ASIA',contract:'Signed',tech:'Under Certification',notes:'Certification is open, rest is done. Pending at TF.'},
+  {id:'h-tourmind',vertical:'Hotel',cat:'Bedbank',name:'TourMind',status:'P0 - immediate',region:'ASIA',contract:'Signed',tech:'In Progress',notes:'CA signed. Certification pending at supplier.'},
+  {id:'h-traveloka',vertical:'Hotel',cat:'OTA',name:'Traveloka',status:'P0 - immediate',region:'ASIA',contract:'In Review',tech:'In Progress',notes:'On Pause. Agreement yet to be signed.'},
+  {id:'h-ratehawk',vertical:'Hotel',cat:'Bedbank',name:'RateHawk',status:'P0 - immediate',region:'GLOBAL',contract:'In Review',tech:'Completed',notes:'Reviewed CA shared with supplier.'},
+  {id:'h-rayna',vertical:'Hotel',cat:'DMC',name:'Rayna Tours',status:'P0 - immediate',region:'MEA',contract:'In Review',tech:'Not Picked',notes:'On Pause. Discussion on Entity is happening.'},
+  {id:'h-desert',vertical:'Hotel',cat:'DMC',name:'Desert Adventures',status:'P0 - immediate',region:'MEA',contract:'In Review',tech:'Completed',notes:'On Pause. Agreement yet to be signed.'},
+  {id:'h-tripmax',vertical:'Hotel',cat:'OTA',name:'Tripmax / Zentrumhub',status:'P0 - immediate',region:'INDIA',contract:'Signed',tech:'In Progress',notes:'Following up for countersigned copy. Certification in review with ZH team.'},
+  {id:'h-travelguru',vertical:'Hotel',cat:'OTA',name:'Travelguru',status:'P0 - immediate',region:'INDIA',contract:'In Review',tech:'In Progress',notes:'Following up over revised CA shared with TG.'},
+  {id:'h-cleartrip',vertical:'Hotel',cat:'OTA',name:'ClearTrip',status:'P0 - immediate',region:'INDIA',contract:'In Review',tech:'Not Picked',notes:'On Pause. Company details and CA pending at our end.'},
+  {id:'h-welcomebeds',vertical:'Hotel',cat:'Bedbank',name:'Welcomebeds',status:'P0 - immediate',region:'EUROPE',contract:'In Review',tech:'Not Picked',notes:'On pause. CA received, in discussion with AARC team. Test API creds pending.'},
+  {id:'h-sterling',vertical:'Hotel',cat:'Bedbank',name:'Sterling (Hobse)',status:'P0 - immediate',region:'GLOBAL',contract:'In Review',tech:'In Progress',notes:'Integration in process. Yogesh sir in discussion with Sterling POC.'},
   {id:'h-yatra',vertical:'Hotel',cat:'OTA',name:'Yatra',status:'P0 - immediate',region:'INDIA',contract:'In Review',tech:'In Progress',notes:'India OTA. Agreement pending at TF legal.'},
   // HOTELS — P1/P2
   {id:'h-funsun',vertical:'Hotel',cat:'DMC',name:'Fun and Sun',status:'P1-Medium',region:'MEA',contract:'In Review',tech:'Not Picked',notes:'Russia/Turkey DMC. Portal slow.'},
@@ -434,7 +439,7 @@ const SEED = [
   {id:'t-tourplan',vertical:'Transfers',cat:'Transfers',name:'Tour Plan (Rosie)',status:'Already Live',contract:'Signed',tech:'Completed',notes:'POC: Yogesh. Live.'},
   {id:'t-voyages',vertical:'Transfers',cat:'Transfers',name:'Voyages',status:'Already Live',contract:'Signed',tech:'Completed',notes:'skye.summerhayes@voyages.com.au. Live.'},
   {id:'t-thompsons',vertical:'Transfers',cat:'Transfers',name:'Thompsons (Africa)',status:'Already Live',contract:'Signed',tech:'Completed',notes:'Africa transfers. POC: Yogesh. Live.'},
-  {id:'t-elife',vertical:'Transfers',cat:'Transfers',name:'Elife',status:'P1-Medium',contract:'Not Signed',tech:'Not Picked',notes:'Under development. Commercials not final.'},
+  {id:'t-elife',vertical:'Transfers',cat:'Transfers',name:'Elife',status:'P0 - immediate',contract:'Not Signed',tech:'Not Picked',notes:'CA with changes shared with supplier. P0.'},
   {id:'t-raileurope',vertical:'Transfers',cat:'Transfers',name:'Rail Europe (Transfers)',status:'P0 - immediate',contract:'In Review',tech:'In Progress',notes:'BE done, FE in progress.'},
   {id:'t-mozio',vertical:'Transfers',cat:'Transfers',name:'Mozio',status:'Exploring',contract:'Not Signed',tech:'—',notes:'On hold — try offline first.'},
   // RAIL
@@ -484,15 +489,15 @@ let pgStates = {}; // key -> {page, filter}
 // ── FIREBASE ──
 function initFirebase() {
   setSyncState('connecting');
-  const suppliersRef = db.ref(SUPPLIERS_PATH);
+  const suppliersRef = dbRef(SUPPLIERS_PATH);
   
   // Check if data exists, seed if not
-  suppliersRef.once('value').then(snap => {
+  dbGet(suppliersRef).then(snap => {
     if (!snap.exists()) {
       toast('First run — seeding supplier data…', 'info');
       const batch = {};
       SEED.forEach(s => { batch[s.id] = s; });
-      return suppliersRef.set(batch).then(() => {
+      return dbSet(suppliersRef, batch).then(() => {
         toast('✓ Data seeded successfully', 'success');
       });
     }
@@ -505,7 +510,7 @@ function initFirebase() {
   });
 
   // Live listener
-  suppliersRef.on('value', snap => {
+  dbOnValue(suppliersRef, snap => {
     if (snap.exists()) {
       allData = snap.val();
       setSyncState('live');
@@ -514,7 +519,7 @@ function initFirebase() {
   });
 
   // Log listener
-  db.ref(LOG_PATH).limitToLast(100).on('value', snap => {
+  dbOnValue(dbRef(LOG_PATH), snap => {
     logData = [];
     if (snap.exists()) {
       snap.forEach(child => logData.unshift(child.val()));
@@ -977,7 +982,7 @@ async function saveEdit() {
   updates.lastUpdatedBy = author;
 
   try {
-    await db.ref(SUPPLIERS_PATH + '/' + currentEdit.id).update(updates);
+    await dbUpdate(dbRef(SUPPLIERS_PATH + '/' + currentEdit.id), updates);
     // Log the change
     const logEntry = {
       ts: Date.now(),
@@ -989,7 +994,7 @@ async function saveEdit() {
       notes: newNotes,
       author: author
     };
-    await db.ref(LOG_PATH).push(logEntry);
+    await dbPush(dbRef(LOG_PATH), logEntry);
     const savedName = currentEdit.name;
     closeModal();
     toast('✓ Saved — ' + savedName, 'success');
@@ -1022,7 +1027,35 @@ function ST(id) {
   renderSection(id);
 }
 
-// ── INIT ──
+// ── INIT called from Firebase module below ──
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getDatabase, ref, set, update, push, onValue, get } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCJXOlSMyFlrcnQ2air1h1dbhFqLxXzOdI",
+  authDomain: "orn-wiki.firebaseapp.com",
+  databaseURL: "https://orn-wiki-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "orn-wiki",
+  storageBucket: "orn-wiki.firebasestorage.app",
+  messagingSenderId: "25736842668",
+  appId: "1:25736842668:web:754f9cf6268e2a5552fe09"
+};
+
+const app = initializeApp(firebaseConfig);
+const _db = getDatabase(app);
+
+// Expose to global scope for use in main script
+window.dbRef  = (path) => ref(_db, path);
+window.dbSet  = (r, v) => set(r, v);
+window.dbUpdate = (r, v) => update(r, v);
+window.dbPush = (r, v) => push(r, v);
+window.dbOnValue = (r, cb) => onValue(r, cb);
+window.dbGet  = (r) => get(r);
+
+// Start the app
 initFirebase();
 </script>
 </body>
