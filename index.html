@@ -86,7 +86,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
 .sec-title{font-size:18px;font-weight:700;margin-bottom:4px}.sec-sub{font-size:12px;color:var(--muted);margin-bottom:16px}
 
 /* ── HUB VISUAL ── */
-.hub-wrap{display:flex;flex-direction:row;align-items:flex-start;gap:28px;padding:0 0 24px;margin-bottom:24px;flex-wrap:nowrap}.hub-left{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;min-width:420px}.hub-right{flex:1;min-width:300px;display:flex;flex-direction:column;gap:14px;justify-content:flex-start}
+.hub-wrap{display:flex;flex-direction:row;align-items:flex-start;gap:28px;padding:0 0 24px;margin-bottom:24px;flex-wrap:nowrap}.hub-left{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;min-width:420px}.hub-right{flex:1;min-width:300px;display:flex;flex-direction:column;gap:0;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:#fff;position:relative}
 .hub-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:24px}
 .hub-diagram{position:relative;width:420px;max-width:100%;height:380px}
 .hub-centre{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:110px;height:110px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 0 0 12px rgba(37,99,235,.08),0 0 0 24px rgba(37,99,235,.04),0 8px 30px rgba(37,99,235,.2);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10}
@@ -817,6 +817,10 @@ function renderHub(){
       <div class="sc" style="text-align:center;border-left:3px solid var(--red)"><div class="sc-label">P0 Active</div><div class="sc-val" style="color:var(--red)">${all.filter(s=>s.status&&s.status.includes('P0')).length}</div></div>
       <div class="sc" style="text-align:center;border-left:3px solid var(--accent)"><div class="sc-label">Total Tracked</div><div class="sc-val" style="color:var(--accent)">${all.length}</div></div>
     </div>
+    </div>
+    <div class="hub-right" id="hubCharts">
+      <div style="height:100%;display:flex;align-items:center;justify-content:center;opacity:.15;font-size:12px;color:#64748b">Loading…</div>
+    </div>
   </div>`;
   document.getElementById('hubSection').innerHTML=html;
 }
@@ -869,13 +873,23 @@ function renderOV(){
   }
 
   const chartsHtml=`
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;font-family:'JetBrains Mono',monospace;padding-left:2px">Hotel APIs — by Status</div>
-      <div style="display:flex;flex-direction:column;gap:6px">${makeTiles(hotelStatuses,false)}</div>
+    <div style="position:relative;height:160px;overflow:hidden;flex-shrink:0">
+      <img src="global-map.png" alt="ORN Global Locations"
+        style="width:100%;height:100%;object-fit:cover;object-position:center"
+        onerror="this.parentElement.style.background='linear-gradient(135deg,#1e3a5f 0%,#2563eb 50%,#0891b2 100%)';this.style.display='none'">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(37,99,235,0.15),rgba(15,23,42,0.5))"></div>
+      <div style="position:absolute;bottom:10px;left:14px;color:#fff;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:.4px;text-shadow:0 1px 3px rgba(0,0,0,.5)">ORN GLOBAL NETWORK</div>
+      <div style="position:absolute;bottom:10px;right:14px;color:rgba(255,255,255,.7);font-size:10px;font-family:'JetBrains Mono',monospace">${totalLive} live connections</div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-top:6px">
-      <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;font-family:'JetBrains Mono',monospace;padding-left:2px">Live APIs — by Vertical</div>
-      <div style="display:flex;flex-direction:column;gap:6px">${makeTiles(verticalStats,true)}</div>
+    <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;font-family:'JetBrains Mono',monospace;margin-bottom:2px">Hotel — Status</div>
+        ${makeTiles(hotelStatuses,false)}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;font-family:'JetBrains Mono',monospace;margin-bottom:2px">Live — by Vertical</div>
+        ${makeTiles(verticalStats,true)}
+      </div>
     </div>`;
 
   const hubCharts=document.getElementById('hubCharts');
