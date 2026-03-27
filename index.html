@@ -604,7 +604,9 @@ function doLogin(){
     sessionStorage.setItem('st_auth','1');
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').style.display='block';
-    initFirebase();
+    // initFirebase called by module once Firebase SDK is ready
+    if(typeof dbRef !== 'undefined') initFirebase();
+    else window._pendingInit = true;
   } else {
     const err=document.getElementById('loginErr');
     err.style.display='block';
@@ -631,6 +633,7 @@ function doLogout(){
 if(sessionStorage.getItem('st_auth')==='1'){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('app').style.display='block';
+  window._pendingInit = true;
 }
 
 // ── CONSTANTS ──
@@ -1240,8 +1243,11 @@ window.dbPush = (r, v) => push(r, v);
 window.dbOnValue = (r, cb) => onValue(r, cb);
 window.dbGet  = (r) => get(r);
 
-// Auto-init if already authenticated
-if(sessionStorage.getItem('st_auth')==='1') initFirebase();
+// Auto-init if already authenticated or if login just happened
+if(window._pendingInit || sessionStorage.getItem('st_auth')==='1'){
+  window._pendingInit = false;
+  initFirebase();
+}
 </script>
 </body>
 </html>
