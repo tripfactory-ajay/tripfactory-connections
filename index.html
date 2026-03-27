@@ -306,6 +306,7 @@ tbody td{padding:9px 14px;vertical-align:middle}
   <div class="tab" onclick="ST('touring')">Touring / Air <span class="tbadge" id="b-tour"></span></div>
   <div class="tab" onclick="ST('destinations')">Dest. Grid</div>
   <div class="tab" onclick="ST('log')">Activity Log <span class="tbadge" id="b-log">0</span></div>
+  <div class="tab" onclick="ST('apifacts')">📊 API Facts</div>
 </div>
 
 <div class="main">
@@ -417,6 +418,35 @@ tbody td{padding:9px 14px;vertical-align:middle}
   <div class="twrap"><div id="logContent"><div class="no-res">No updates yet</div></div></div>
 </div>
 
+
+<!-- API FACTS -->
+<div id="sec-apifacts" class="sec">
+  <div class="sec-title">📊 API Facts</div>
+  <div class="sec-sub">Property inventory, key facts and description for every API we track — sourced from official websites and press releases</div>
+  <div class="fbar">
+    <div class="swrap"><span class="sico">🔍</span><input type="text" id="afSearch" placeholder="Search APIs..." oninput="renderAF()"></div>
+    <select class="fsel" id="afStatus" onchange="renderAF()">
+      <option value="">All Statuses</option>
+      <option value="Already Live">✅ Live</option>
+      <option value="P0">🔴 P0</option>
+      <option value="In Development">🟣 In Dev</option>
+      <option value="P1">🟡 P1/P2</option>
+      <option value="Exploring">🔵 Exploring</option>
+      <option value="Backburner">Backburner</option>
+    </select>
+    <select class="fsel" id="afCat" onchange="renderAF()">
+      <option value="">All Verticals</option>
+      <option value="Hotel">Hotels</option>
+      <option value="Activities">Activities</option>
+      <option value="Transfers">Transfers</option>
+      <option value="Rail">Rail</option>
+      <option value="Car Rental">Car Rental</option>
+      <option value="Touring">Touring / Air</option>
+    </select>
+  </div>
+  <div id="afSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px"></div>
+  <div id="afCards"></div>
+</div>
 </div><!-- /main -->
 </div><!-- /app -->
 
@@ -775,7 +805,7 @@ function refreshAllViews(){
   if(active)renderSection(active.id.replace('sec-',''));
 }
 function renderSection(id){
-  const r={overview:renderOV,live:renderLive,hotels:renderH,activities:renderA,transfers:renderT,rail:renderRail,carrental:renderCar,touring:renderTour,destinations:renderDest,log:renderLog};
+  const r={overview:renderOV,live:renderLive,hotels:renderH,activities:renderA,transfers:renderT,rail:renderRail,carrental:renderCar,touring:renderTour,destinations:renderDest,log:renderLog,apifacts:renderAF};
   if(r[id])r[id]();
 }
 function updateBadges(){
@@ -1100,6 +1130,162 @@ async function saveNewAPI(){
 }
 
 // ── TABS ──
+
+// ── API FACTS DATA ──
+const API_FACTS = [
+  // ══ HOTELS — LIVE ══
+  {name:'Hotelbeds',vertical:'Hotel',cat:'Bedbank',status:'Already Live',props:'220,000+',propNum:220000,hq:'Palma, Spain',founded:'2001',fact:'The leading B2B TravelTech distributor, part of HBX Group. Connects 60,000+ hard-to-access travel trade buyers across 190+ source markets. Excellent Europe, Americas and growing APAC coverage.',source:'HBX Group official 2025'},
+  {name:'Agoda',vertical:'Hotel',cat:'Bedbank/OTA',status:'Already Live',props:'6,000,000+',propNum:6000000,hq:'Singapore',founded:'2005',fact:'Part of Booking Holdings, Agoda is the dominant OTA across Asia-Pacific with 6M+ hotels and homes worldwide. Exceptional depth across SEA, Japan, Korea and India — critical for ORN APAC strategy.',source:'Agoda.com official 2025'},
+  {name:'Expedia Rapid',vertical:'Hotel',cat:'Bedbank',status:'Already Live',props:'750,000+',propNum:750000,hq:'Seattle, USA',founded:'1996',fact:'Expedia Group B2B API covering 750K+ properties across 310,000 destinations and 35+ property types. Handles 12 billion API calls per day. Direct-sourced inventory for competitive pricing.',source:'Expedia Partner Solutions official'},
+  {name:'TBO',vertical:'Hotel',cat:'Bedbank',status:'Already Live',props:'1,000,000+',propNum:1000000,hq:'Dubai / India',founded:'2006',fact:'Listed on NSE and BSE, TBO connects 159,000+ buyers with 1M+ hotels in 100+ countries. Strong India, MEA and emerging markets coverage — ideal for ORN India operations.',source:'TBO.com official'},
+  {name:'Web Beds',vertical:'Hotel',cat:'Bedbank',status:'Already Live',props:'368,000+',propNum:368000,hq:'Australia',founded:'2013',fact:"World's second-largest B2B accommodation supplier (a Webjet division). 30,000+ directly contracted hotels across 170 countries with a strong European and Asian presence.",source:'WebBeds official'},
+  {name:'Dida Travels',vertical:'Hotel',cat:'Bedbank',status:'Already Live',props:'1,500,000+',propNum:1500000,hq:'Guangzhou, China',founded:'2012',fact:"No.1 distributor for Chinese outbound market. 1.5M+ travel products including 100,000+ directly contracted hotels. Premier access to APAC's high-value B2B channels with long advance lead times.",source:'Dida.com official 2025'},
+  {name:'GRNConnect',vertical:'Hotel',cat:'Bedbank',status:'Already Live',props:'400,000+',propNum:400000,hq:'Delhi, India',founded:'1993',fact:'India-based global B2B bedbank with 400K+ hotels and 200K+ apartments. Strong in Europe and MEA with 35,000 agents across 108 countries. Currently disabled — ops issue under review.',source:'AltexSoft / GRNConnect official'},
+  {name:'HyperGuest',vertical:'Hotel',cat:'Bedbank',status:'Already Live',props:'~5,000',propNum:5000,hq:'Tel Aviv, Israel',founded:'2018',fact:'Open B2B marketplace connecting hoteliers directly with travel providers at zero distribution cost. 3,000+ directly connected hotels and 200+ distribution partners. Lower volume, higher margin.',source:'HyperGuest official'},
+  {name:'Illusions (iOLX)',vertical:'Hotel',cat:'Bedbank',status:'Already Live',props:'~300,000',propNum:300000,hq:'Global',founded:'2000s',fact:'iOLX distribution switch providing a single API connection to multiple hotel sources. Rates and availability vary per client profile — functions as a connectivity aggregator rather than a direct bedbank.',source:'iOLX documentation'},
+  {name:'Derbysoft',vertical:'Hotel',cat:'Bedbank',status:'Already Live',props:'250,000+',propNum:250000,hq:'Dallas, USA',founded:'2002',fact:'Leading hotel connectivity switch with 250,000+ hotel properties and 330+ distribution partners. Processes 12M+ room nights per month. Strong in chain hotel connectivity (Marriott, Hilton, IHG etc).',source:'Hospitalitytech.com / DerbySoft official'},
+  {name:'Paximum',vertical:'Hotel',cat:'Bedbank',status:'Already Live',props:'900,000+',propNum:900000,hq:'Antalya, Turkey',founded:'2015',fact:'Turkey/MEA specialist aggregating 60+ global bed banks and 5,000+ direct contracts. 900K mapped hotels via suppliers including Travco, Meeting Point and TUI. Note: flagged as poor API by Amit sir.',source:'wbe.travel / Paximum official'},
+  {name:'Darina Holidays',vertical:'Hotel',cat:'DMC',status:'Already Live',props:'~1,500',propNum:1500,hq:'Dubai, UAE',founded:'2000s',fact:'UAE-based DMC with direct contracts across the Middle East. Specialist in UAE, Oman, Saudi and Jordan with strong local ground operator relationships. Live but mapping blockers pending.',source:'Internal data'},
+  {name:'Locanda',vertical:'Hotel',cat:'DMC',status:'Already Live',props:'~500',propNum:500,hq:'Italy',founded:'2000s',fact:'Boutique Italian DMC operator with direct contracted properties across Italy. Specialist in lesser-known Italian destinations with strong local relationships. Live — mapping pending at TF.',source:'Internal data'},
+  {name:'Travco',vertical:'Hotel',cat:'DMC',status:'Already Live',props:'~8,000',propNum:8000,hq:'London, UK',founded:'1975',fact:'One of the UKs most established wholesale DMCs with 8,000 directly contracted properties. Strong Egypt, Middle East and Mediterranean coverage. Part of Travco Group — fully live and operational.',source:'Onboarding form / Travco official'},
+  {name:'Travelbullz',vertical:'Hotel',cat:'DMC',status:'Already Live',props:'~50,000',propNum:50000,hq:'Thailand',founded:'2010s',fact:'Thailand-based DMC that also distributes globally online. Strong SEA coverage with competitive Thailand and APAC rates. Currently DISABLED due to ops issue — challenges regarding API under review.',source:'Internal data'},
+  {name:'Vervotech',vertical:'Hotel',cat:'Tech/Mapping',status:'Already Live',props:'N/A',propNum:0,hq:'India',founded:'2018',fact:'Hotel mapping and deduplication technology. Phase 1 (Hotel2Hotel mapping) and Phase 2 (Room-level mapping) both live. Essential for deduplicating our multi-supplier hotel inventory.',source:'Vervotech official'},
+  {name:'Ottila',vertical:'Hotel',cat:'DMC',status:'Already Live',props:'~5,000',propNum:5000,hq:'Mumbai, India',founded:'2010s',fact:'India-focused B2B wholesaler specialising in Taj and leading Indian hotel chains. Key supplier for ORN India domestic travel product.',source:'Internal data / Onboarding form'},
+  {name:'Staah',vertical:'Hotel',cat:'Channel Manager',status:'Already Live',props:'30,000+',propNum:30000,hq:'New Zealand',founded:'2009',fact:'Channel manager connecting 30,000+ hotels in Asia-Pacific. Allows properties to distribute inventory across all OTAs from a single platform — key for independent hotels in APAC.',source:'Staah official'},
+  {name:'Rategain',vertical:'Hotel',cat:'Channel Manager',status:'Already Live',props:'200,000+',propNum:200000,hq:'India',founded:'2004',fact:'One of the largest travel tech companies in Asia. Connects 200,000+ properties and 700+ OTA/GDS channels. Used by major hotel chains and independent properties globally.',source:'RateGain official'},
+  {name:'Tripanzee',vertical:'Hotel',cat:'Channel Manager',status:'Already Live',props:'~10,000',propNum:10000,hq:'Global',founded:'2010s',fact:'Hotel channel manager with capability to connect via Siteminder. Provides distribution to boutique and independent properties not reachable through major bedbanks.',source:'Internal / Noe sheet'},
+  {name:'Unihotel',vertical:'Hotel',cat:'Channel Manager',status:'Already Live',props:'~5,000',propNum:5000,hq:'Global',founded:'2010s',fact:'Hotel direct integration enabling properties to distribute inventory directly without a traditional channel manager fee. Focused on independent and smaller hotel groups.',source:'Internal / Noe sheet'},
+  // ══ HOTELS — P0 ══
+  {name:'MG Holiday',vertical:'Hotel',cat:'DMC',status:'P0 - immediate',props:'~10,000',propNum:10000,hq:'Thailand',founded:'2000s',fact:'Major Thailand and Asia-Pacific DMC with 10,000+ mapped properties. Strong in Thailand, Malaysia, Bali and wider SEA. Mapping file pending — cert complete, awaiting go-live sign-off.',source:'Internal / MG Bedbank official'},
+  {name:'Miki Travel',vertical:'Hotel',cat:'DMC',status:'P0 - immediate',props:'~19,000',propNum:19000,hq:'Hong Kong / UK',founded:'1967',fact:'One of the most experienced wholesalers in the industry with offices in 41 countries. 19,000 directly contracted hotels globally. Specialist in Japan, Europe and luxury FIT/GIT. Credit line being finalised.',source:'Onboarding form / Mize.tech'},
+  {name:'G2 Travel',vertical:'Hotel',cat:'DMC',status:'P0 - immediate',props:'~30,000',propNum:30000,hq:'Europe',founded:'2000s',fact:'European-focused DMC and wholesaler with 30,000+ properties. Strong UK, France, Italy and Spain coverage. Cert complete — live creds and CA sign-off pending from supplier side.',source:'Internal data'},
+  {name:'Restel',vertical:'Hotel',cat:'Bedbank',status:'P0 - immediate',props:'100,000+',propNum:100000,hq:'Barcelona, Spain',founded:'1990s',fact:'Part of HotUSA Group. 100,000+ hotels in 175 countries, 150 airlines and 75,000 activities. CA signed and countersigned — under development with tech team. Major inventory boost for Europe.',source:'Mize.tech / Pruvo guide'},
+  {name:'RateHawk',vertical:'Hotel',cat:'Bedbank',status:'P0 - immediate',props:'3,200,000+',propNum:3200000,hq:'UAE / Global',founded:'2016',fact:'B2B platform by Emerging Travel Group. 3.2M accommodation options, 250,000 direct hotel contracts, 350 wholesalers. 67% booking growth in 2024. Strong in Europe, MEA and rapidly growing APAC.',source:'ETG official press release 2025'},
+  {name:'Traveloka',vertical:'Hotel',cat:'OTA',status:'P0 - immediate',props:'1,000,000+',propNum:1000000,hq:'Jakarta, Indonesia',founded:'2012',fact:'Southeast Asia leading OTA with 1M+ hotels worldwide. Strongest in Indonesia, Thailand, Vietnam, Malaysia and Philippines. On pause — agreement yet to be signed. Key for SEA markets.',source:'Traveloka Google Play / official'},
+  {name:'Desert Adventures',vertical:'Hotel',cat:'DMC',status:'P0 - immediate',props:'~2,000',propNum:2000,hq:'Dubai, UAE',founded:'1995',fact:'Dubai-based DMC and desert experience specialist. Direct contracts across UAE, Oman and Saudi Arabia. Live API keys awaited — mapping pending at TF end.',source:'Internal data'},
+  {name:'Tripmax / Zentrumhub',vertical:'Hotel',cat:'OTA',status:'P0 - immediate',props:'~500,000',propNum:500000,hq:'India',founded:'2010s',fact:'India domestic hotel aggregator connecting regional and budget properties not available on global bedbanks. Critical for ORN India product depth. Under development — mid-milestone target.',source:'Internal / ZentrumHub official'},
+  {name:'Travelguru',vertical:'Hotel',cat:'OTA',status:'P0 - immediate',props:'~100,000',propNum:100000,hq:'India',founded:'2006',fact:'India-focused OTA with strong domestic hotel coverage including homestays and budget properties. Revised CA shared — under development. Key for India tier-2 and tier-3 city coverage.',source:'Internal data'},
+  {name:'ClearTrip',vertical:'Hotel',cat:'OTA',status:'P0 - immediate',props:'~400,000',propNum:400000,hq:'India / UAE',founded:'2006',fact:'Flipkart-owned OTA with strong India coverage. Key for India domestic travel. CA pending at supplier. Priority for ORN India expansion into metro and regional markets.',source:'Internal data'},
+  {name:'Sterling (Hobse)',vertical:'Hotel',cat:'Bedbank',status:'P0 - immediate',props:'~200,000',propNum:200000,hq:'Global',founded:'2000s',fact:'Global bedbank with strong leisure inventory. Integration in progress — Yogesh sir in discussion with POC. Delayed due to tech resource availability on supplier side.',source:'Internal data'},
+  {name:'Yatra',vertical:'Hotel',cat:'OTA',status:'P0 - immediate',props:'~100,000',propNum:100000,hq:'India',founded:'2006',fact:'Major India OTA covering flights, hotels and holidays. Agreement pending at TF legal. Key supplier for ORN India operations across metro and domestic destinations.',source:'Internal data'},
+  {name:'Welcomebeds',vertical:'Hotel',cat:'Bedbank',status:'P0 - immediate',props:'~200,000',propNum:200000,hq:'Europe / SEA',founded:'2000s',fact:'European and SEA-focused bedbank. CA received — in discussion with AARC team. Test API credentials pending. Adds European depth particularly Spain, France and Italy.',source:'Internal data'},
+  {name:'Rakuten Travel Exchange',vertical:'Hotel',cat:'OTA',status:'P0 - immediate',props:'~100,000',propNum:100000,hq:'Tokyo, Japan',founded:'2000s',fact:'Japanese OTA powerhouse part of Rakuten Group. Key supplier for Japan hotel access — one of the best inventories for Japan domestics and ryokans. Cert open — test cases pending at TF.',source:'Internal data'},
+  {name:'WithinEarth',vertical:'Hotel',cat:'DMC',status:'P0 - immediate',props:'~5,000',propNum:5000,hq:'UAE / Asia',founded:'2010s',fact:'Regional DMC covering UAE and Asia with strong Middle East and SEA direct contracts. On pause — commercial being reviewed. Cert sent January 5.',source:'Internal data'},
+  {name:'TourMind',vertical:'Hotel',cat:'Bedbank',status:'P0 - immediate',props:'~70,000',propNum:70000,hq:'China / SEA',founded:'2010s',fact:'Aggressive SEA and MEA-focused bedbank. 70,000+ direct properties. CA signed — certification pending at supplier. Strong China outbound and SEA inbound coverage.',source:'Onboarding form / Internal'},
+  {name:'Rayna Tours',vertical:'Hotel',cat:'DMC',status:'P0 - immediate',props:'~3,000',propNum:3000,hq:'Dubai, UAE',founded:'2008',fact:'Major UAE tour operator and DMC with direct hotel contracts across Dubai, Abu Dhabi and wider GCC. Discussion on entity ongoing — commercial review in progress.',source:'Internal data'},
+  // ══ ACTIVITIES — LIVE ══
+  {name:'Musement (TUI)',vertical:'Activities',cat:'Activities',status:'Already Live',props:'~50,000 experiences',propNum:50000,hq:'Milan, Italy / TUI Group',founded:'2013',fact:'TUI Group Tours and Activities division covering 100+ destinations worldwide. Thousands of excursions, attraction tickets and experiences. Integrated with easyJet, major OTAs. Payment challenges under discussion.',source:'TUI Musement official 2024'},
+  {name:'Tour Plan (Rosie)',vertical:'Activities',cat:'Activities',status:'Already Live',props:'~10,000 activities',propNum:10000,hq:'Global',founded:'2000s',fact:'Activities distribution platform connecting tour operators with local experience providers. Live for both Activities and Transfers verticals. Managed by Yogesh.',source:'Internal / Noe sheet'},
+  {name:'Fare Harbour',vertical:'Activities',cat:'Activities',status:'Already Live',props:'~20,000 operators',propNum:20000,hq:'USA',founded:'2013',fact:'Leading booking software and distribution platform for tours and activities operators across US and Europe. 20,000+ operators on the platform. Live — katya.fadeeva@fareharbor.com.',source:'FareHarbor official'},
+  {name:'Cebu',vertical:'Activities',cat:'Activities',status:'Already Live',props:'~5,000 activities',propNum:5000,hq:'Singapore / APAC',founded:'2000s',fact:'Singapore-based activities and experiences provider with strong APAC coverage. Live and operational.',source:'Internal data'},
+  {name:'Prio',vertical:'Activities',cat:'Activities',status:'Already Live',props:'~15,000 activities',propNum:15000,hq:'UAE',founded:'2010s',fact:'UAE-based activities and attraction ticketing platform. Strong Middle East coverage including theme parks, desert experiences and city tours. Live and operational.',source:'Internal data'},
+  {name:'City Sightseeing',vertical:'Activities',cat:'Activities',status:'Already Live',props:'~100 cities',propNum:100,hq:'Spain / Global',founded:'1999',fact:'Global hop-on hop-off bus and city tour brand operating in 100+ cities worldwide. Iconic red buses across Europe, Middle East and Americas. Live and operational.',source:'City Sightseeing official'},
+  {name:'Thompsons',vertical:'Activities',cat:'Activities',status:'Already Live',props:'~5,000 experiences',propNum:5000,hq:'Africa',founded:'1920s',fact:'One of Africa oldest and largest travel companies. Strong tours, safaris and activities across sub-Saharan Africa. Live for both Activities and Transfers.',source:'Internal data / Noe sheet'},
+  {name:'HIS',vertical:'Activities',cat:'Activities',status:'Already Live',props:'~3,000 activities',propNum:3000,hq:'Tokyo, Japan',founded:'1980',fact:'Major Japanese travel company with strong Japan domestic and Asia activities inventory. Note: flagged as not a good API — maintained live but limited use.',source:'Internal data'},
+  {name:'GlobalTix',vertical:'Activities',cat:'Activities',status:'Already Live',props:'~10,000 attractions',propNum:10000,hq:'Singapore',founded:'2013',fact:'APAC attraction ticketing platform covering theme parks, museums and experiences across Singapore, Malaysia, Hong Kong and wider Asia. POC: Yogesh. Live (Row 125 in sheet).',source:'GlobalTix official / Internal'},
+  {name:'Bokun',vertical:'Activities',cat:'Activities',status:'Already Live',props:'~5,000 operators',propNum:5000,hq:'Reykjavik, Iceland',founded:'2012',fact:'Tour and activities booking platform used by 5,000+ operators worldwide. CA not yet signed. Login credentials held by Ram sir. HTML issues post-live being resolved.',source:'Bokun official / Internal'},
+  {name:'Hotelbeds (Activities)',vertical:'Activities',cat:'Activities',status:'Already Live',props:'~20,000 activities',propNum:20000,hq:'Palma, Spain',founded:'2001',fact:'Hotelbeds activities channel providing access to experiences and attraction tickets alongside hotel inventory. Allows packaging hotel and activities through a single connection. Live (Row 162).',source:'Internal / spreadsheet'},
+  {name:'Haka Tours (Intrepid)',vertical:'Activities',cat:'Activities',status:'Already Live',props:'~200 tours',propNum:200,hq:'New Zealand',founded:'2005',fact:'New Zealand adventure tour operator part of Intrepid Group. Specialists in NZ outdoor adventures, Maori cultural experiences and active tourism. Live via direct integration.',source:'Internal / Noe sheet'},
+  // ══ ACTIVITIES — P0/PIPELINE ══
+  {name:'Ventrata',vertical:'Activities',cat:'Activities',status:'P0 - immediate',props:'~500 operators',propNum:500,hq:'Prague, Czech Republic',founded:'2016',fact:'Specialist booking and distribution platform for attraction operators (theme parks, zoos, museums). Clients include Golden Tours, Timberbush and Top attractions. Cert pending 2+ months.',source:'Ventrata official'},
+  {name:'TourCMS',vertical:'Activities',cat:'Activities',status:'P0 - immediate',props:'~1,000 operators',propNum:1000,hq:'UK',founded:'2002',fact:'Tour operator software and channel manager. Platform live — individual suppliers need onboarding. Clients include Julia Travel, Golden Tours and other Europe operators. Tech issue being resolved.',source:'TourCMS official'},
+  {name:'Viator',vertical:'Activities',cat:'Activities',status:'On Hold',props:'~300,000 experiences',propNum:300000,hq:'San Francisco, USA',founded:'2000',fact:'World largest experiences OTA (TripAdvisor subsidiary). 300,000+ experiences in 190 countries. 80% integrated per Ram sir then de-prioritised. Contract signed. Significant potential when resumed.',source:'Viator official / Ram Garg WhatsApp'},
+  {name:'Direct Ferries',vertical:'Activities',cat:'Activities',status:'P0 - immediate',props:'~700 ferry routes',propNum:700,hq:'UK',founded:'2007',fact:'Europe largest ferry booking platform covering 700+ routes across Mediterranean, North Sea, Adriatic and beyond. Contract in execution. Adds ferry inventory for ORN Europe product.',source:'Direct Ferries official'},
+  // ══ TRANSFERS — LIVE ══
+  {name:'Tour Plan (Rosie) Transfers',vertical:'Transfers',cat:'Transfers',status:'Already Live',props:'Global transfers',propNum:0,hq:'Global',founded:'2000s',fact:'Transfer booking platform live for both activities and transfers verticals. Provides ground transfer connectivity in key destinations. Managed by Yogesh at TF.',source:'Internal / Noe sheet'},
+  {name:'Voyages',vertical:'Transfers',cat:'Transfers',status:'Already Live',props:'Australia focus',propNum:0,hq:'Australia',founded:'2000s',fact:'Australian transfers and transport specialist. Strong coverage of major Australian cities, airports and regional destinations. skye.summerhayes@voyages.com.au.',source:'Internal data'},
+  {name:'Thompsons (Africa)',vertical:'Transfers',cat:'Transfers',status:'Already Live',props:'Africa focus',propNum:0,hq:'South Africa',founded:'1920s',fact:'Africa ground transfers and logistics arm of Thompsons Travel. Covers airport transfers, coach hire and inter-city transfers across sub-Saharan Africa. Live and operational.',source:'Internal / Noe sheet'},
+  // ══ RAIL — LIVE ══
+  {name:'Journey Beyond',vertical:'Rail',cat:'Rail',status:'Already Live',props:'~10 iconic rail routes',propNum:10,hq:'Adelaide, Australia',founded:'2019',fact:'Operates Australia iconic rail journeys including The Ghan, Indian Pacific, Overland and Great Southern. Premium long-distance rail experiences across Australia. Live via direct integration.',source:'Journey Beyond official / Noe sheet'},
+  // ══ RAIL — PIPELINE ══
+  {name:'Rail Europe',vertical:'Rail',cat:'Rail',status:'P0 - immediate',props:'~110 rail operators',propNum:110,hq:'Paris, France / USA',founded:'1992',fact:'Europe leading rail booking platform connecting 110+ rail operators across 45 countries. BE done, FE in progress. Adds Eurail, Interrail, Eurostar, TGV and regional trains to ORN product.',source:'Rail Europe official'},
+  // ══ CAR RENTAL — LIVE ══
+  {name:'Jucy Campers',vertical:'Car Rental',cat:'Campervan',status:'Already Live',props:'1,000+ vehicles',propNum:1000,hq:'Auckland, New Zealand',founded:'2001',fact:'NZ and Australia campervan and motorhome specialist with 1,000+ vehicles. Budget-friendly to premium options. Operates across AU/NZ with US presence. Direct integration live via AutoEurope.',source:'JUCY official / NZ.com'},
+  {name:'Driveaway (AutoEurope)',vertical:'Car Rental',cat:'Car Rental',status:'Already Live',props:'Global fleet',propNum:0,hq:'USA / Global',founded:'1954',fact:'AutoEurope is the parent company of Driveaway, one of the world oldest car rental consolidators. Connects to Hertz, Avis, Budget, Europcar and 50+ rental brands globally across 180 countries. Live via direct integration.',source:'AutoEurope / Driveaway official / Noe sheet'},
+  {name:'Europcar',vertical:'Car Rental',cat:'Car Rental',status:'P0 - immediate',props:'~200,000 vehicles',propNum:200000,hq:'Paris, France',founded:'1949',fact:'One of Europe largest car rental companies with 200,000+ vehicles across 140 countries. 3,500+ locations worldwide. Under certification at supplier. Key for ORN Europe car rental product.',source:'Europcar official'},
+  // ══ TOURING / AIR — LIVE ══
+  {name:'AAT Kings Multi-Day',vertical:'Touring',cat:'Multi-Day Touring',status:'Already Live',props:'~50 tours',propNum:50,hq:'Australia',founded:'1950s',fact:'Australia and New Zealand premium guided touring brand. Part of The Travel Corporation. Iconic outback, coastal and cultural multi-day tours. Live via TTC API.',source:'AAT Kings / TTC / Noe sheet'},
+  {name:'Insight Vacations',vertical:'Touring',cat:'Multi-Day Touring',status:'Already Live',props:'~100 tours',propNum:100,hq:'Global (TTC)',founded:'1978',fact:'Premium guided touring brand operated by The Travel Corporation. 100+ itineraries across Europe, Americas, Asia and Middle East. 5-star hotels and iconic experiences. Live via TTC API.',source:'Insight Vacations / TTC / Noe sheet'},
+  {name:'Trafalgar',vertical:'Touring',cat:'Multi-Day Touring',status:'Already Live',props:'~250 tours',propNum:250,hq:'Global (TTC)',founded:'1947',fact:"World's most awarded guided tour brand. 250+ itineraries across 6 continents. Combines iconic sightseeing with Be My Guest local experiences. Part of TTC. Live.",source:'Trafalgar / TTC / Noe sheet'},
+  {name:'Cost Saver',vertical:'Touring',cat:'Multi-Day Touring',status:'Already Live',props:'~100 tours',propNum:100,hq:'Global (TTC)',founded:'1990s',fact:'Budget-friendly touring brand under The Travel Corporation. Covers Europe, Americas and Asia. Flexible itineraries for value-conscious travellers. Live via TTC API.',source:'TTC / Noe sheet'},
+  {name:'Contiki',vertical:'Touring',cat:'Multi-Day Touring',status:'Already Live',props:'~350 tours',propNum:350,hq:'Global (TTC)',founded:'1962',fact:'World leading 18-35 travel brand. 350+ tours across 6 continents. Famous for social group travel with flexible options from budget to premium. Part of TTC. Live.',source:'Contiki / TTC / Noe sheet'},
+  {name:'Brendan Vacations',vertical:'Touring',cat:'Multi-Day Touring',status:'Already Live',props:'~50 tours',propNum:50,hq:'Ireland / Global (TTC)',founded:'1975',fact:'Specialist in Ireland, Scotland, England and Celtic nations touring. Part of The Travel Corporation. Premium itineraries for the Celtic cultural experience market. Live.',source:'Brendan Vacations / TTC / Noe sheet'},
+  {name:'Luxury Gold',vertical:'Touring',cat:'Multi-Day Touring',status:'Already Live',props:'~50 tours',propNum:50,hq:'Global (TTC)',founded:'2014',fact:"Ultra-luxury touring brand from The Travel Corporation. 50+ tours combining 5-star hotels, private experiences and bespoke service. TTC's premium flagship product. Live.",source:'Luxury Gold / TTC / Noe sheet'},
+  {name:'G Adventures',vertical:'Touring',cat:'Multi-Day Touring',status:'Already Live',props:'1,000+ tours',propNum:1000,hq:'Toronto, Canada',founded:'1990',fact:"World's largest small-group adventure tour operator. 1,000+ tours in 100+ countries across all 7 continents. Groups of 10-18. 16% Active category growth in 2024. Via Sherpa API integration.",source:'G Adventures official 2025 / Noe sheet'},
+  {name:'Verteil (NDC)',vertical:'Touring',cat:'Air',status:'Already Live',props:'All major airlines',propNum:0,hq:'India',founded:'2014',fact:'New Distribution Capability (NDC) platform enabling direct airline content distribution. Provides access to richer airline content, bundled offers and ancillaries not available via traditional GDS. Live globally.',source:'Verteil official / Noe sheet'},
+  {name:'Nautika',vertical:'Touring',cat:'Ferries',status:'Already Live',props:'India ferry routes',propNum:0,hq:'India',founded:'2000s',fact:'India domestic ferry operator covering key routes including Andaman Islands and coastal India. Direct integration providing ferry inventory for ORN India product. Live.',source:'Internal / Noe sheet'},
+];
+
+// ── RENDER API FACTS ──
+let _afData = [];
+function renderAF(){
+  const s = (document.getElementById('afSearch')||{}).value||'';
+  const sf = (document.getElementById('afStatus')||{}).value||'';
+  const cf = (document.getElementById('afCat')||{}).value||'';
+
+  const filtered = API_FACTS.filter(d => {
+    if(s && !d.name.toLowerCase().includes(s.toLowerCase()) && !d.fact.toLowerCase().includes(s.toLowerCase())) return false;
+    if(sf && !d.status.includes(sf)) return false;
+    if(cf && d.vertical !== cf) return false;
+    return true;
+  });
+
+  // Summary stats
+  const live = API_FACTS.filter(d=>isLive(d.status));
+  const totalProps = live.reduce((a,d)=>a+(d.propNum||0),0);
+  document.getElementById('afSummary').innerHTML = `
+    <div class="sc" style="border-left:3px solid var(--green)"><div class="sc-label">APIs Tracked</div><div class="sc-val" style="color:var(--accent)">${API_FACTS.length}</div><div class="sc-sub">all verticals</div></div>
+    <div class="sc" style="border-left:3px solid var(--green)"><div class="sc-label">Live APIs</div><div class="sc-val" style="color:var(--green)">${live.length}</div></div>
+    <div class="sc" style="border-left:3px solid var(--accent)"><div class="sc-label">Total Live Properties</div><div class="sc-val" style="color:var(--accent);font-size:16px">${(totalProps/1000000).toFixed(1)}M+</div><div class="sc-sub">estimated (with overlap)</div></div>
+    <div class="sc" style="border-left:3px solid var(--red)"><div class="sc-label">P0 Pipeline</div><div class="sc-val" style="color:var(--red)">${API_FACTS.filter(d=>d.status.includes('P0')).length}</div></div>
+    <div class="sc" style="border-left:3px solid var(--muted)"><div class="sc-label">Showing</div><div class="sc-val" style="color:var(--muted2)">${filtered.length}</div><div class="sc-sub">filtered results</div></div>
+  `;
+
+  // Group by vertical
+  const groups = {};
+  filtered.forEach(d => {
+    if(!groups[d.vertical]) groups[d.vertical] = [];
+    groups[d.vertical].push(d);
+  });
+
+  const vColors = {Hotel:'#2563eb',Activities:'#16a34a',Transfers:'#ea580c',Rail:'#7c3aed','Car Rental':'#0891b2',Touring:'#d97706'};
+  const vIcons = {Hotel:'🏨',Activities:'🎭',Transfers:'🚌',Rail:'🚂','Car Rental':'🚗',Touring:'✈️'};
+
+  let html = '';
+  Object.entries(groups).forEach(([vert, items]) => {
+    const col = vColors[vert] || '#64748b';
+    const ico = vIcons[vert] || '🔗';
+    html += `<div style="margin-bottom:28px">
+      <div style="font-size:13px;font-weight:700;color:${col};text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid ${col}30;display:flex;align-items:center;gap:8px">
+        ${ico} ${vert} <span style="font-size:11px;font-weight:400;color:var(--muted)">(${items.length} APIs)</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px">
+        ${items.map(d => {
+          const liveStyle = isLive(d.status) ? `border-left:4px solid var(--green)` : d.status.includes('P0') ? `border-left:4px solid var(--red)` : d.status.includes('In Dev') ? `border-left:4px solid var(--indigo)` : `border-left:4px solid var(--border)`;
+          const propDisplay = d.props && d.props !== 'N/A' ? `<span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${col}">${d.props}</span><span style="font-size:10px;color:var(--muted);margin-left:4px">properties</span>` : `<span style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">mapping/tech</span>`;
+          return `<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;${liveStyle}">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+              <div>
+                <div style="font-weight:700;font-size:14px;color:var(--text)">${d.name}</div>
+                <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px">${d.hq} · Est. ${d.founded}</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0;margin-left:12px">
+                ${SB(d.status)}
+                <div style="margin-top:5px">${propDisplay}</div>
+              </div>
+            </div>
+            <p style="font-size:12px;color:var(--muted2);line-height:1.6;margin-bottom:8px">${d.fact}</p>
+            <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;border-top:1px solid var(--border);padding-top:6px">Source: ${d.source}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  });
+
+  if(!html) html = '<div class="no-res">No APIs match your filters</div>';
+  document.getElementById('afCards').innerHTML = html;
+}
+
 function setLiveView(v){
   window._liveView=v;
   document.getElementById('cardViewBtn').classList.toggle('active',v==='card');
@@ -1109,7 +1295,7 @@ function setLiveView(v){
 function ST(id){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
-  const keys=['overview','live','hotels','activities','transfers','rail','carrental','touring','destinations','log'];
+  const keys=['overview','live','hotels','activities','transfers','rail','carrental','touring','destinations','log','apifacts'];
   const idx=keys.indexOf(id);
   if(document.querySelectorAll('.tab')[idx])document.querySelectorAll('.tab')[idx].classList.add('active');
   const sec=document.getElementById('sec-'+id);if(sec)sec.classList.add('active');
