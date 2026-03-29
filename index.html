@@ -634,15 +634,10 @@ function doLogin(){
     sessionStorage.setItem('st_auth','1');
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').style.display='block';
-    // Show seed data immediately regardless of Firebase
     SEED.forEach(s=>{allData[s.id]={...s};});
     refreshAllViews();
-    // Try Firebase - retry every 200ms until dbRef is ready
-    function tryInit(attempts){
-      if(typeof window.dbRef==='function'){ initFirebase(); }
-      else if(attempts>0){ setTimeout(()=>tryInit(attempts-1), 200); }
-    }
-    tryInit(25);
+    if(window._firebaseReady){ initFirebase(); }
+    else{ window._needsFirebase = true; }
   } else {
     const err=document.getElementById('loginErr');
     err.style.display='block';
@@ -665,18 +660,16 @@ function doLogout(){
     c.appendChild(d);
   }
 })();
-// Check existing session
-if(sessionStorage.getItem('st_auth')==='1'){
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('app').style.display='block';
-  SEED.forEach(s=>{allData[s.id]={...s};});
-  refreshAllViews();
-  function tryInitSession(attempts){
-    if(typeof window.dbRef==='function'){ initFirebase(); }
-    else if(attempts>0){ setTimeout(()=>tryInitSession(attempts-1), 200); }
+// Check existing session - wait for DOM
+window.addEventListener('DOMContentLoaded', function(){
+  if(sessionStorage.getItem('st_auth')==='1'){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    SEED.forEach(s=>{allData[s.id]={...s};});
+    refreshAllViews();
+    window._needsFirebase = true;
   }
-  tryInitSession(25);
-}
+});
 
 // ── CONSTANTS ──
 const SUPPLIERS_PATH='supply-tracker/suppliers';
@@ -880,6 +873,16 @@ function renderOV(){
   const vf=(document.getElementById('ovVert')||{}).value||'';
   const sf=(document.getElementById('ovStatus')||{}).value||'';
   renderHub();
+  // Set map image after hub renders
+  setTimeout(()=>{
+    const md=document.getElementById('mapImg');
+    if(md&&typeof MAPB64!=='undefined'){
+      md.style.backgroundImage='url('+MAPB64+')';
+      md.style.backgroundSize='contain';
+      md.style.backgroundRepeat='no-repeat';
+      md.style.backgroundPosition='center';
+    }
+  },50);
   // Charts
   const sg={};all.filter(x=>x.vertical==='Hotel').forEach(h=>{const k=isLive(h.status)?'Live':h.status&&h.status.includes('P0')?'P0':h.status&&h.status.includes('In Development')?'In Dev':h.status&&(h.status.includes('P1')||h.status.includes('P2'))?'P1/P2':h.status&&h.status.includes('Exploring')?'Exploring':'Backburner';sg[k]=(sg[k]||0)+1;});
   const cc={Live:'var(--green)',P0:'var(--red)','In Dev':'var(--indigo)','P1/P2':'var(--yellow)',Exploring:'var(--accent)',Backburner:'var(--muted)'};
@@ -1429,8 +1432,15 @@ window.dbPush = (r, v) => push(r, v);
 window.dbOnValue = (r, cb) => onValue(r, cb);
 window.dbGet  = (r) => get(r);
 
-// Firebase functions are now ready on window
-// initFirebase() will be called by tryInit() retries from doLogin/session restore
+// Firebase is ready — init if user is authenticated
+window._firebaseReady = true;
+// Init Firebase if login already happened
+if(window._needsFirebase){
+  window._needsFirebase = false;
+  initFirebase();
+} else if(sessionStorage.getItem('st_auth')==='1'){
+  initFirebase();
+}
 </script>
 </body>
 </html>
