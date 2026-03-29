@@ -845,24 +845,14 @@ function renderHub(){
       <div class="hub-box ${cls}">
         <div class="hub-icon">${n.icon}</div>
         <div class="hub-label">${n.label}</div>
-        <div class="hub-count ${n.color}">${n.live>0?n.live:n.count}</div>
-        <div class="hub-sub">${n.live>0?'live':'total'}</div>
+        <div class="hub-count ${n.color}">${n.count}</div>
+        <div class="hub-sub">${n.live} live</div>
       </div>
     </div>`;
   });
 
   html+=`</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;width:100%;max-width:600px;margin-top:16px">
-      <div class="sc" style="text-align:center;border-left:3px solid var(--green)"><div class="sc-label">Total Live</div><div class="sc-val" style="color:var(--green)">${totalLive}</div></div>
-      <div class="sc" style="text-align:center;border-left:3px solid var(--indigo)"><div class="sc-label">In Dev</div><div class="sc-val" style="color:var(--indigo)">${inDev}</div></div>
-      <div class="sc" style="text-align:center;border-left:3px solid var(--red)"><div class="sc-label">P0 Active</div><div class="sc-val" style="color:var(--red)">${all.filter(s=>s.status&&s.status.includes('P0')).length}</div></div>
-      <div class="sc" style="text-align:center;border-left:3px solid var(--accent)"><div class="sc-label">Total Tracked</div><div class="sc-val" style="color:var(--accent)">${all.length}</div></div>
-    </div>
-    </div>
-    <div class="hub-right" id="hubCharts">
-      <div style="height:100%;display:flex;align-items:center;justify-content:center;opacity:.15;font-size:12px;color:#64748b">Loading…</div>
-    </div>
-  </div>`;
+    </div>`;
   document.getElementById('hubSection').innerHTML=html;
 }
 
