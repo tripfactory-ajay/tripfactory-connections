@@ -873,16 +873,7 @@ function renderOV(){
   const vf=(document.getElementById('ovVert')||{}).value||'';
   const sf=(document.getElementById('ovStatus')||{}).value||'';
   renderHub();
-  // Set map image after hub renders
-  setTimeout(()=>{
-    const md=document.getElementById('mapImg');
-    if(md&&typeof MAPB64!=='undefined'){
-      md.style.backgroundImage='url('+MAPB64+')';
-      md.style.backgroundSize='contain';
-      md.style.backgroundRepeat='no-repeat';
-      md.style.backgroundPosition='center';
-    }
-  },50);
+  // Map rendered inline via MAPB64
   // Charts
   const sg={};all.filter(x=>x.vertical==='Hotel').forEach(h=>{const k=isLive(h.status)?'Live':h.status&&h.status.includes('P0')?'P0':h.status&&h.status.includes('In Development')?'In Dev':h.status&&(h.status.includes('P1')||h.status.includes('P2'))?'P1/P2':h.status&&h.status.includes('Exploring')?'Exploring':'Backburner';sg[k]=(sg[k]||0)+1;});
   const cc={Live:'var(--green)',P0:'var(--red)','In Dev':'var(--indigo)','P1/P2':'var(--yellow)',Exploring:'var(--accent)',Backburner:'var(--muted)'};
@@ -923,15 +914,7 @@ function renderOV(){
   // Inject into hub-right AFTER renderHub has written hubSection to DOM
   const hubCharts = document.getElementById('hubCharts');
   if(hubCharts){
-    hubCharts.innerHTML = `
-    <div id="mapImg" style="width:100%;height:100%;background:linear-gradient(135deg,#0f2447,#1e3a8a,#0891b2);background-size:contain;background-position:center center;background-repeat:no-repeat;position:relative;border-radius:10px;overflow:hidden">
-      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 60%,rgba(10,22,60,.7))"></div>
-      <div style="position:absolute;bottom:14px;left:16px;color:#fff;font-size:12px;font-weight:700;letter-spacing:.5px;text-shadow:0 1px 4px rgba(0,0,0,.6)">ORN GLOBAL NETWORK</div>
-      <div style="position:absolute;bottom:14px;right:16px;color:rgba(255,255,255,.8);font-size:11px;font-family:'JetBrains Mono',monospace;text-shadow:0 1px 4px rgba(0,0,0,.6)">${totalLiveCount} live connections</div>
-    </div>`;
-    const mapDiv = document.getElementById('mapImg');
-    if(mapDiv){ mapDiv.style.backgroundImage = 'url('+MAPB64+')'; mapDiv.style.backgroundSize='contain'; mapDiv.style.backgroundRepeat='no-repeat'; }
-    if(mapDiv) mapDiv.style.backgroundPosition = 'center';
+    hubCharts.innerHTML = '<div style="width:100%;height:100%;background:url('+MAPB64+') center/contain no-repeat,linear-gradient(135deg,#0f2447,#1e3a8a,#0891b2);position:relative;border-radius:10px;overflow:hidden"><div style=\"position:absolute;inset:0;background:linear-gradient(to bottom,transparent 60%,rgba(10,22,60,.7))\"></div><div style=\"position:absolute;bottom:14px;left:16px;color:#fff;font-size:12px;font-weight:700;letter-spacing:.5px;text-shadow:0 1px 4px rgba(0,0,0,.6)\">ORN GLOBAL NETWORK</div><div style=\"position:absolute;bottom:14px;right:16px;color:rgba(255,255,255,.8);font-size:11px;font-family:monospace;text-shadow:0 1px 4px rgba(0,0,0,.6)\">'+totalLiveCount+' live connections</div></div>';
   }
   // Table
   let data=all.filter(x=>{
